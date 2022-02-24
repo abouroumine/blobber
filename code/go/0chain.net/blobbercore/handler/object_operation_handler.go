@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/0chain/blobber/code/go/0chain.net/blobbercore/blobberhttp"
@@ -291,8 +292,9 @@ func (fsh *StorageHandler) DownloadFile(ctx context.Context, r *http.Request) (r
 		d := (60 * time.Second)
 		// we use Truncate because we work with UTC in the first place.
 		availableTime := shareInfo.AvailableAt.Truncate(d).Unix()
+		fmt.Println(availableTime)
 		if common.Timestamp(availableTime) > common.Now() {
-			return nil, errors.New("the file is not available until: " + shareInfo.AvailableAt.UTC().Format("2006-01-02T15:04:05"))
+			return nil, common.NewErrorf("download_file", "the file is not available until: %v", shareInfo.AvailableAt.UTC().Format("2006-01-02T15:04:05"))
 		}
 
 		readMarker.AuthTicket = datatypes.JSON(authTokenString)
