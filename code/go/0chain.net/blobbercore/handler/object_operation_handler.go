@@ -438,7 +438,8 @@ func (fsh *StorageHandler) CommitWrite(ctx context.Context, r *http.Request) (*b
 		if err := updateFileChange.Unmarshal(change.Input); err != nil {
 			return nil, err
 		}
-		fileRef, err := reference.GetReference(ctx, allocationID, updateFileChange.Path)
+		//fileRef, err := reference.GetReference(ctx, allocationID, updateFileChange.Path)
+		fileRef, err := reference.GetReferenceID(ctx, allocationID, updateFileChange.Path)
 		if err != nil {
 			return nil, err
 		}
@@ -513,7 +514,8 @@ func (fsh *StorageHandler) CommitWrite(ctx context.Context, r *http.Request) (*b
 	if err != nil {
 		return nil, err
 	}
-	rootRef, err := reference.GetReference(ctx, allocationID, "/")
+	//rootRef, err := reference.GetReference(ctx, allocationID, "/")
+	rootRef, err := reference.GetReferenceHash(ctx, allocationID, "/")
 	if err != nil {
 		return nil, err
 	}
@@ -820,7 +822,8 @@ func (fsh *StorageHandler) CopyObject(ctx context.Context, r *http.Request) (int
 		return nil, common.NewError("invalid_parameters", "Invalid file path. "+err.Error())
 	}
 	newPath := filepath.Join(destPath, objectRef.Name)
-	destRef, _ := reference.GetReference(ctx, allocationID, newPath)
+	//destRef, _ := reference.GetReference(ctx, allocationID, newPath)
+	destRef, _ := reference.GetReferenceID(ctx, allocationID, newPath)
 	if destRef != nil {
 		return nil, common.NewError("invalid_parameters", "Invalid destination path. Object Already exists.")
 	}
@@ -856,7 +859,8 @@ func (fsh *StorageHandler) DeleteFile(ctx context.Context, r *http.Request, conn
 		return nil, common.NewError("invalid_parameters", "Invalid path")
 	}
 
-	fileRef, _ := reference.GetReference(ctx, connectionObj.AllocationID, path)
+	//fileRef, _ := reference.GetReference(ctx, connectionObj.AllocationID, path)
+	fileRef, _ := reference.GetReferenceDelete(ctx, connectionObj.AllocationID, path)
 	_ = ctx.Value(constants.ContextKeyClientKey).(string)
 	if fileRef != nil {
 		deleteSize := fileRef.Size
@@ -1076,7 +1080,7 @@ func getExistingFileRef(fsh *StorageHandler, ctx context.Context, r *http.Reques
 		err := json.Unmarshal([]byte(uploadMetaString), &formData)
 
 		if err == nil {
-			return fsh.checkIfFileAlreadyExists(ctx, allocationObj.ID, formData.Path)
+			return fsh.checkIfFileRefIDAlreadyExists(ctx, allocationObj.ID, formData.Path)
 		}
 	}
 	return nil

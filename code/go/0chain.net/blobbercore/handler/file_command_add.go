@@ -36,7 +36,8 @@ func (cmd *AddFileCommand) IsAuthorized(ctx context.Context, req *http.Request, 
 		return common.NewError("invalid_parameters",
 			"Invalid parameters. Error parsing the meta data for upload."+err.Error())
 	}
-	exisitingFileRef, _ := reference.GetReference(ctx, allocationObj.ID, fileChanger.Path)
+	//exisitingFileRef, _ := reference.GetReference(ctx, allocationObj.ID, fileChanger.Path)
+	exisitingFileRef, _ := reference.GetReferenceID(ctx, allocationObj.ID, fileChanger.Path)
 
 	if exisitingFileRef != nil {
 		return common.NewError("duplicate_file", "File at path already exists")

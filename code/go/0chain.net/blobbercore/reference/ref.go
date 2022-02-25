@@ -225,6 +225,42 @@ func GetReference(ctx context.Context, allocationID, path string) (*Ref, error) 
 	return nil, err
 }
 
+// GetReferenceID get FileRef ID with allcationID and path from postgres
+func GetReferenceID(ctx context.Context, allocationID, path string) (*Ref, error) {
+	ref := &Ref{}
+	db := datastore.GetStore().GetTransaction(ctx)
+	db = db.Select("id")
+	err := db.Where(&Ref{AllocationID: allocationID, Path: path}).First(ref).Error
+	if err == nil {
+		return ref, nil
+	}
+	return nil, err
+}
+
+// GetReferenceHash get FileRef ID with allcationID and path from postgres
+func GetReferenceHash(ctx context.Context, allocationID, path string) (*Ref, error) {
+	ref := &Ref{}
+	db := datastore.GetStore().GetTransaction(ctx)
+	db = db.Select("hash")
+	err := db.Where(&Ref{AllocationID: allocationID, Path: path}).First(ref).Error
+	if err == nil {
+		return ref, nil
+	}
+	return nil, err
+}
+
+// GetReferenceDelete get FileRef ID with allcationID and path from postgres
+func GetReferenceDelete(ctx context.Context, allocationID, path string) (*Ref, error) {
+	ref := &Ref{}
+	db := datastore.GetStore().GetTransaction(ctx)
+	db = db.Select("path", "name", "size", "hash", "merkle_root")
+	err := db.Where(&Ref{AllocationID: allocationID, Path: path}).First(ref).Error
+	if err == nil {
+		return ref, nil
+	}
+	return nil, err
+}
+
 func GetReferenceFromLookupHash(ctx context.Context, allocationID, path_hash string) (*Ref, error) {
 	ref := &Ref{}
 	db := datastore.GetStore().GetTransaction(ctx)
@@ -280,7 +316,8 @@ func GetRefWithSortedChildren(ctx context.Context, allocationID, path string) (*
 	var refs []*Ref
 	db := datastore.GetStore().GetTransaction(ctx)
 	db = db.Where(Ref{ParentPath: path, AllocationID: allocationID}).Or(Ref{Type: DIRECTORY, Path: path, AllocationID: allocationID})
-	err := db.Order("level, lookup_hash").Find(&refs).Error
+	//err := db.Order("level, lookup_hash").Find(&refs).Error
+	err := db.Order("level, path").Find(&refs).Error
 	if err != nil {
 		return nil, err
 	}
@@ -345,17 +382,21 @@ func (r *Ref) CalculateDirHash(ctx context.Context, saveToDB bool) (string, erro
 	sort.SliceStable(r.Children, func(i, j int) bool {
 		return strings.Compare(r.Children[i].LookupHash, r.Children[j].LookupHash) == -1
 	})
-	for _, childRef := range r.Children {
-		_, err := childRef.CalculateHash(ctx, saveToDB)
-		if err != nil {
-			return "", err
-		}
-	}
+	//for _, childRef := range r.Children {
+	//	_, err := childRef.CalculateHash(ctx, saveToDB)
+	//	if err != nil {
+	//		return "", err
+	//	}
+	//}
 	childHashes := make([]string, len(r.Children))
 	childPathHashes := make([]string, len(r.Children))
 	var refNumBlocks int64
 	var size int64
 	for index, childRef := range r.Children {
+		_, err := childRef.CalculateHash(ctx, saveToDB)
+		if err != nil {
+			return "", err
+		}
 		childHashes[index] = childRef.Hash
 		childPathHashes[index] = childRef.PathHash
 		refNumBlocks += childRef.NumBlocks

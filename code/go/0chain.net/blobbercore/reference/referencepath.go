@@ -46,7 +46,8 @@ func GetReferencePathFromPaths(ctx context.Context, allocationID string, paths [
 
 	// root reference_objects with parent_path=""
 	db = db.Or("parent_path = ? AND allocation_id = ?", "", allocationID)
-	err := db.Order("level, lookup_hash").Find(&refs).Error
+	//err := db.Order("level, lookup_hash").Find(&refs).Error
+	err := db.Order("level, path").Find(&refs).Error
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +111,8 @@ func GetObjectTree(ctx context.Context, allocationID, path string) (*Ref, error)
 		db = db.Or("path LIKE ? AND allocation_id = ?", (path + "%"), allocationID)
 	}
 
-	err := db.Order("level, lookup_hash").Find(&refs).Error
+	//err := db.Order("level, lookup_hash").Find(&refs).Error
+	err := db.Order("level, path").Find(&refs).Error
 	if err != nil {
 		return nil, err
 	}
